@@ -35,15 +35,17 @@ export default function EpisodesPage() {
   if (error || !data) return <p>Error loading episodes</p>;
 
   return (
-    <div>
+    <div className="container">
       <h1>Episodes</h1>
-      {data.episodes.results.map((ep) => (
-        <div key={ep.id}>
-          <Link href={`/episodes/${ep.id}`}>
-            {ep.name} ({ep.episode})
-          </Link>
-        </div>
-      ))}
+      <div className="grid">
+        {data.episodes.results.map((ep) => (
+          <div key={ep.id} className="card">
+            <Link href={`/episodes/${ep.id}`}>
+              {ep.name} ({ep.episode})
+            </Link>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

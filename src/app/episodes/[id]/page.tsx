@@ -35,7 +35,6 @@ const GET_EPISODE = gql`
 
 export default function EpisodePage() {
   const params = useParams();
-
   const { data, loading, error } = useQuery<EpisodeData>(GET_EPISODE, {
     variables: { id: params.id },
   });
@@ -44,19 +43,19 @@ export default function EpisodePage() {
   if (error || !data) return <p>Error loading episode</p>;
 
   return (
-    <div>
+    <div className="container">
       <h1>{data.episode.name}</h1>
       <p>Air Date: {data.episode.air_date}</p>
       <p>Episode: {data.episode.episode}</p>
 
       <h2>Characters</h2>
-      <ul>
+      <div className="grid">
         {data.episode.characters.map((char) => (
-          <li key={char.id}>
+          <div key={char.id} className="card">
             <Link href={`/characters/${char.id}`}>{char.name}</Link>
-          </li>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }

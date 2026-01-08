@@ -35,17 +35,25 @@ export default function HomePage() {
   if (error || !data) return <p>Error loading characters</p>;
 
   return (
-    <div>
-      <h1>Characters</h1>
-      {data.characters.results.map((char) => (
-        <div key={char.id}>
-          <img src={char.image} width={150} />
-          <h3>
-            <Link href={`/characters/${char.id}`}>{char.name}</Link>
-          </h3>
-        </div>
-      ))}
-      <Link href="/episodes">Go to Episodes</Link>
+    <div className="container">
+      <h1 style={{ textAlign: "center", marginBottom: "20px" }}>Rick and Morty Characters</h1>
+
+      <div className="grid">
+        {data.characters.results.map((char) => (
+          <div key={char.id} className="card">
+            <img src={char.image} alt={char.name} />
+            <h3>
+              <Link href={`/characters/${char.id}`}>{char.name}</Link>
+            </h3>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ marginTop: "30px", textAlign: "center" }}>
+        <Link href="/episodes" className="card" style={{ padding: "10px 20px", display: "inline-block" }}>
+          Go to Episodes
+        </Link>
+      </div>
     </div>
   );
 }
