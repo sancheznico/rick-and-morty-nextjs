@@ -36,8 +36,26 @@ export default function HomePage() {
 
   return (
     <div className="container">
-      <h1 style={{ textAlign: "center", marginBottom: "20px" }}>Rick and Morty Characters</h1>
+      {/* Title */}
+      <h1 style={{ textAlign: "center", marginBottom: "10px" }}>
+        Rick and Morty Characters
+      </h1>
 
+      {/* Episodes link UNDER the title */}
+      <div style={{ textAlign: "center", marginBottom: "20px" }}>
+        <Link
+          href="/episodes"
+          className="card"
+          style={{
+            display: "inline-block",
+            padding: "10px 20px",
+          }}
+        >
+          View Episodes →
+        </Link>
+      </div>
+
+      {/* Characters grid */}
       <div className="grid">
         {data.characters.results.map((char) => (
           <div key={char.id} className="card">
@@ -47,12 +65,6 @@ export default function HomePage() {
             </h3>
           </div>
         ))}
-      </div>
-
-      <div style={{ marginTop: "30px", textAlign: "center" }}>
-        <Link href="/episodes" className="card" style={{ padding: "10px 20px", display: "inline-block" }}>
-          Go to Episodes
-        </Link>
       </div>
     </div>
   );
