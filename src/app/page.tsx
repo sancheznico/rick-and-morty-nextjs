@@ -36,22 +36,22 @@ export default function HomePage() {
   if (loading) return <p>Loading...</p>;
   if (error || !data) return <p>Error loading characters</p>;
 
-  // Filter characters by name
   const filteredCharacters = data.characters.results.filter((char) =>
     char.name.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
     <div className="container">
-      <h1 style={{ textAlign: "center" }}>Rick and Morty Characters</h1>
+      {/* Header row */}
+      <div className="header">
+        <div>
+          <h1>Rick and Morty Characters</h1>
+          <Link href="/episodes" className="episodes-link">
+            View Episodes →
+          </Link>
+        </div>
 
-      {/* Episodes link */}
-      <div style={{ textAlign: "center", margin: "10px 0 20px" }}>
-        <Link href="/episodes">View Episodes →</Link>
-      </div>
-
-      {/* Search input */}
-      <div style={{ textAlign: "center", marginBottom: "20px" }}>
+        {/* Search input (top right) */}
         <input
           type="text"
           placeholder="Search character..."
@@ -73,7 +73,6 @@ export default function HomePage() {
         ))}
       </div>
 
-      {/* No results */}
       {filteredCharacters.length === 0 && (
         <p style={{ textAlign: "center", marginTop: "20px" }}>
           No characters found.
