@@ -4,6 +4,7 @@ import { gql } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 
 type Episode = {
   id: string;
@@ -37,6 +38,7 @@ const GET_CHARACTER = gql`
 
 export default function CharacterPage() {
   const params = useParams();
+
   const { data, loading, error } = useQuery<CharacterData>(GET_CHARACTER, {
     variables: { id: params.id },
   });
@@ -47,8 +49,15 @@ export default function CharacterPage() {
   return (
     <div className="container">
       <h1>{data.character.name}</h1>
-      <div className="card" style={{ width: "250px", margin: "20px auto" }}>
-        <img src={data.character.image} alt={data.character.name} />
+
+      <div className="card" style={{ maxWidth: 300 }}>
+        <Image
+          src={data.character.image}
+          alt={data.character.name}
+          width={300}
+          height={300}
+          className="card-image"
+        />
         <p>Status: {data.character.status}</p>
         <p>Species: {data.character.species}</p>
       </div>

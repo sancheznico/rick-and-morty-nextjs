@@ -1,5 +1,5 @@
-import ApolloWrapper from "../providers/ApolloProvider";
 import "../styles/globals.css";
+import ApolloWrapper from "../providers/ApolloProvider";
 
 export default function RootLayout({
   children,

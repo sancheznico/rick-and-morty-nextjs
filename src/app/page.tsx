@@ -3,6 +3,7 @@
 import { gql } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 
 type Character = {
@@ -42,7 +43,7 @@ export default function HomePage() {
 
   return (
     <div className="container">
-      {/* Header row */}
+      {/* Header */}
       <div className="header">
         <div>
           <h1>Rick and Morty Characters</h1>
@@ -51,33 +52,32 @@ export default function HomePage() {
           </Link>
         </div>
 
-        {/* Search input (top right) */}
         <input
           type="text"
           placeholder="Search character..."
+          className="search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="search"
         />
       </div>
 
-      {/* Characters grid */}
+      {/* Grid */}
       <div className="grid">
         {filteredCharacters.map((char) => (
           <div key={char.id} className="card">
-            <img src={char.image} alt={char.name} />
+            <Image
+              src={char.image}
+              alt={char.name}
+              width={300}
+              height={300}
+              className="card-image"
+            />
             <h3>
               <Link href={`/characters/${char.id}`}>{char.name}</Link>
             </h3>
           </div>
         ))}
       </div>
-
-      {filteredCharacters.length === 0 && (
-        <p style={{ textAlign: "center", marginTop: "20px" }}>
-          No characters found.
-        </p>
-      )}
     </div>
   );
 }
