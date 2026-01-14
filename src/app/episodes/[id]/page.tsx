@@ -4,10 +4,12 @@ import { gql } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 
 type Character = {
   id: string;
   name: string;
+  image: string;
 };
 
 type EpisodeData = {
@@ -20,7 +22,7 @@ type EpisodeData = {
 };
 
 const GET_EPISODE = gql`
-  query ($id: ID!) {
+  query GetEpisode($id: ID!) {
     episode(id: $id) {
       name
       air_date
@@ -28,31 +30,49 @@ const GET_EPISODE = gql`
       characters {
         id
         name
+        image
       }
     }
   }
 `;
 
+function formatEpisode(code: string) {
+  const season = code.substring(1, 3);
+  const ep = code.substring(4, 6);
+  return `Season ${parseInt(season)} • Episode ${parseInt(ep)}`;
+}
+
 export default function EpisodePage() {
   const params = useParams();
-  const { data, loading, error } = useQuery<EpisodeData>(GET_EPISODE, {
-    variables: { id: params.id },
-  });
+
+  const { data, loading, error } = useQuery<EpisodeData>(
+    GET_EPISODE,
+    { variables: { id: params.id } }
+  );
 
   if (loading) return <p>Loading...</p>;
   if (error || !data) return <p>Error loading episode</p>;
 
   return (
     <div className="container">
-      <h1>{data.episode.name}</h1>
+      <h1>{formatEpisode(data.episode.episode)}</h1>
+      <p><strong>{data.episode.name}</strong></p>
       <p>Air Date: {data.episode.air_date}</p>
-      <p>Episode: {data.episode.episode}</p>
 
-      <h2>Characters</h2>
+      <h2 style={{ marginTop: "30px" }}>Characters</h2>
+
       <div className="grid">
         {data.episode.characters.map((char) => (
           <div key={char.id} className="card">
-            <Link href={`/characters/${char.id}`}>{char.name}</Link>
+            <Image
+              src={char.image}
+              alt={char.name}
+              width={300}
+              height={300}
+            />
+            <h3>
+              <Link href={`/characters/${char.id}`}>{char.name}</Link>
+            </h3>
           </div>
         ))}
       </div>

@@ -7,7 +7,7 @@ import Link from "next/link";
 type Episode = {
   id: string;
   name: string;
-  episode: string;
+  episode: string; // e.g. "S01E01"
 };
 
 type EpisodesData = {
@@ -28,6 +28,12 @@ const GET_EPISODES = gql`
   }
 `;
 
+function formatEpisode(code: string) {
+  const season = code.substring(1, 3);
+  const ep = code.substring(4, 6);
+  return `Season ${parseInt(season)} • Episode ${parseInt(ep)}`;
+}
+
 export default function EpisodesPage() {
   const { data, loading, error } = useQuery<EpisodesData>(GET_EPISODES);
 
@@ -37,12 +43,16 @@ export default function EpisodesPage() {
   return (
     <div className="container">
       <h1>Episodes</h1>
+
       <div className="grid">
         {data.episodes.results.map((ep) => (
           <div key={ep.id} className="card">
-            <Link href={`/episodes/${ep.id}`}>
-              {ep.name} ({ep.episode})
-            </Link>
+            <h3>
+              <Link href={`/episodes/${ep.id}`}>
+                {formatEpisode(ep.episode)}
+              </Link>
+            </h3>
+            <p style={{ fontSize: "14px", opacity: 0.8 }}>{ep.name}</p>
           </div>
         ))}
       </div>

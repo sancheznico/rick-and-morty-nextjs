@@ -12,8 +12,8 @@
    Body
 ===================== */
 body {
-  background-color: #1a1a1a;
-  color: #eaeaea;
+  background: radial-gradient(circle at top, #1f1f1f 0%, #121212 60%);
+  color: #e6e6e6;
   padding: 20px;
 }
 
@@ -31,12 +31,14 @@ h3 {
    Links
 ===================== */
 a {
-  color: #61dafb;
+  color: #5ddcff;
   text-decoration: none;
+  transition: color 0.15s ease, text-shadow 0.15s ease;
 }
 
 a:hover {
-  text-decoration: underline;
+  color: #8ae9ff;
+  text-shadow: 0 0 8px rgba(93, 220, 255, 0.4);
 }
 
 /* =====================
@@ -69,21 +71,23 @@ a:hover {
 ===================== */
 .search {
   width: 220px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid #444;
-  background-color: #2b2b2b;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #333;
+  background-color: #1e1e1e;
   color: #ffffff;
   font-size: 14px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .search::placeholder {
-  color: #aaa;
+  color: #888;
 }
 
 .search:focus {
   outline: none;
-  border-color: #61dafb;
+  border-color: #5ddcff;
+  box-shadow: 0 0 0 3px rgba(93, 220, 255, 0.15);
 }
 
 /* =====================
@@ -101,15 +105,20 @@ a:hover {
    Card
 ===================== */
 .card {
-  background-color: #2b2b2b;
-  border-radius: 10px;
-  padding: 10px;
+  background: linear-gradient(180deg, #2b2b2b, #242424);
+  border-radius: 14px;
+  padding: 12px;
   text-align: center;
-  transition: transform 0.15s ease;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .card:hover {
-  transform: translateY(-3px);
+  transform: translateY(-4px);
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.6),
+    0 0 12px rgba(93, 220, 255, 0.25);
 }
 
 /* =====================
@@ -123,7 +132,7 @@ a:hover {
 }
 
 /* =====================
-   Responsive
+   Responsive Grid
 ===================== */
 @media (max-width: 1200px) {
   .grid {
@@ -149,5 +158,145 @@ a:hover {
 @media (max-width: 480px) {
   .grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* =====================
+   Character Page Layout
+===================== */
+.character-page {
+  max-width: 900px;
+  margin: 40px auto;
+  display: flex;
+  gap: 30px;
+  align-items: flex-start;
+}
+
+/* =====================
+   Character Card
+===================== */
+.character-card {
+  background: linear-gradient(180deg, #2b2b2b, #232323);
+  border-radius: 16px;
+  padding: 20px;
+  width: 300px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.character-image {
+  width: 100%;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+/* =====================
+   Episodes Card
+===================== */
+.episodes-card {
+  flex: 1;
+  background: linear-gradient(180deg, #2b2b2b, #232323);
+  border-radius: 16px;
+  padding: 20px;
+  max-height: 500px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.episodes-card h2 {
+  margin-bottom: 10px;
+}
+
+/* =====================
+   Scrollable Episodes List
+===================== */
+.episodes-list {
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.episode-item {
+  padding: 12px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #1f1f1f, #191919);
+  margin-bottom: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.episode-item:hover {
+  background-color: #262626;
+  transform: translateX(3px);
+}
+
+.load-trigger {
+  height: 20px;
+}
+
+/* =====================
+   Filter Buttons
+===================== */
+.filters {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.filters button {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid #333;
+  background: #1b1b1b;
+  color: #ddd;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
+}
+
+.filters button:hover {
+  background-color: #222;
+}
+
+.filters button.active {
+  background: linear-gradient(135deg, #5ddcff, #4aa8ff);
+  color: #000;
+  border-color: transparent;
+  box-shadow: 0 0 14px rgba(93, 220, 255, 0.45);
+}
+
+/* =====================
+   Fade-in Animation
+===================== */
+.fade-in {
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =====================
+   Responsive Character Page
+===================== */
+@media (max-width: 768px) {
+  .character-page {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .character-card,
+  .episodes-card {
+    width: 100%;
+    max-height: none;
   }
 }

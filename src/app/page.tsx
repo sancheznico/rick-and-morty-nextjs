@@ -10,6 +10,7 @@ type Character = {
   id: string;
   name: string;
   image: string;
+  species: string; // changed from status
 };
 
 type CharactersData = {
@@ -18,21 +19,27 @@ type CharactersData = {
   };
 };
 
+// GraphQL query updated to fetch species instead of status
 const GET_CHARACTERS = gql`
-  query {
-    characters(page: 1) {
+  query GetCharacters($status: String) {
+    characters(page: 1, filter: { status: $status }) {
       results {
         id
         name
         image
+        species
       }
     }
   }
 `;
 
 export default function HomePage() {
-  const { data, loading, error } = useQuery<CharactersData>(GET_CHARACTERS);
   const [search, setSearch] = useState("");
+  const [status, setStatus] = useState<string | null>(null);
+
+  const { data, loading, error } = useQuery<CharactersData>(GET_CHARACTERS, {
+    variables: { status },
+  });
 
   if (loading) return <p>Loading...</p>;
   if (error || !data) return <p>Error loading characters</p>;
@@ -43,28 +50,60 @@ export default function HomePage() {
 
   return (
     <div className="container">
-      {/* Header */}
+      {/* HEADER */}
       <div className="header">
+        {/* LEFT: Title + Filter Buttons */}
         <div>
           <h1>Rick and Morty Characters</h1>
+
+          <div className="filters">
+            <button
+              className={!status ? "active" : ""}
+              onClick={() => setStatus(null)}
+            >
+              All
+            </button>
+            <button
+              className={status === "Alive" ? "active" : ""}
+              onClick={() => setStatus("Alive")}
+            >
+              Alive
+            </button>
+            <button
+              className={status === "Dead" ? "active" : ""}
+              onClick={() => setStatus("Dead")}
+            >
+              Dead
+            </button>
+            <button
+              className={status === "unknown" ? "active" : ""}
+              onClick={() => setStatus("unknown")}
+            >
+              Unknown
+            </button>
+          </div>
+        </div>
+
+        {/* RIGHT: Search + View Episodes */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <input
+            type="text"
+            placeholder="Search character..."
+            className="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+
           <Link href="/episodes" className="episodes-link">
             View Episodes →
           </Link>
         </div>
-
-        <input
-          type="text"
-          placeholder="Search character..."
-          className="search"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
       </div>
 
-      {/* Grid */}
+      {/* GRID OF CHARACTERS */}
       <div className="grid">
         {filteredCharacters.map((char) => (
-          <div key={char.id} className="card">
+          <div key={char.id} className="card fade-in">
             <Image
               src={char.image}
               alt={char.name}
@@ -75,6 +114,7 @@ export default function HomePage() {
             <h3>
               <Link href={`/characters/${char.id}`}>{char.name}</Link>
             </h3>
+            <p style={{ fontSize: "13px", opacity: 0.85 }}>{char.species}</p>
           </div>
         ))}
       </div>
