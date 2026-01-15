@@ -10,7 +10,8 @@ type Character = {
   id: string;
   name: string;
   image: string;
-  species: string; // changed from status
+  status: string;
+  species: string;
 };
 
 type CharactersData = {
@@ -19,14 +20,14 @@ type CharactersData = {
   };
 };
 
-// GraphQL query updated to fetch species instead of status
 const GET_CHARACTERS = gql`
-  query GetCharacters($status: String) {
-    characters(page: 1, filter: { status: $status }) {
+  query {
+    characters(page: 1) {
       results {
         id
         name
         image
+        status
         species
       }
     }
@@ -34,87 +35,118 @@ const GET_CHARACTERS = gql`
 `;
 
 export default function HomePage() {
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState<string | null>(null);
+  const { data, loading, error } = useQuery<CharactersData>(GET_CHARACTERS);
 
-  const { data, loading, error } = useQuery<CharactersData>(GET_CHARACTERS, {
-    variables: { status },
-  });
+  const [search, setSearch] = useState("");
+  const [filterValue, setFilterValue] = useState("all");
+  const [sortValue, setSortValue] = useState("none");
 
   if (loading) return <p>Loading...</p>;
   if (error || !data) return <p>Error loading characters</p>;
 
-  const filteredCharacters = data.characters.results.filter((char) =>
+  let characters = data.characters.results.filter((char) =>
     char.name.toLowerCase().includes(search.toLowerCase())
   );
+
+  characters = characters.filter((char) => {
+    if (filterValue === "all") return true;
+    if (filterValue === "alive") return char.status === "Alive";
+    if (filterValue === "dead") return char.status === "Dead";
+    if (filterValue === "unknown") return char.status === "unknown";
+    return char.species === filterValue;
+  });
+
+  if (sortValue === "az") {
+    characters = [...characters].sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
+  }
+
+  if (sortValue === "za") {
+    characters = [...characters].sort((a, b) =>
+      b.name.localeCompare(a.name)
+    );
+  }
 
   return (
     <div className="container">
       {/* HEADER */}
       <div className="header">
-        {/* LEFT: Title + Filter Buttons */}
+        {/* LEFT */}
         <div>
           <h1>Rick and Morty Characters</h1>
 
-          <div className="filters">
-            <button
-              className={!status ? "active" : ""}
-              onClick={() => setStatus(null)}
+          <div className="controls">
+            {/* FILTER */}
+            <select
+              className="input-dark select"
+              value={filterValue}
+              onChange={(e) => setFilterValue(e.target.value)}
             >
-              All
-            </button>
-            <button
-              className={status === "Alive" ? "active" : ""}
-              onClick={() => setStatus("Alive")}
+              <option value="all">All Characters</option>
+
+              <optgroup label="Status">
+                <option value="alive">Alive</option>
+                <option value="dead">Dead</option>
+                <option value="unknown">Unknown</option>
+              </optgroup>
+
+              <optgroup label="Species">
+                <option value="Human">Human</option>
+                <option value="Alien">Alien</option>
+                <option value="Robot">Robot</option>
+                <option value="Humanoid">Humanoid</option>
+              </optgroup>
+            </select>
+
+            {/* SORT */}
+            <select
+              className="input-dark select"
+              value={sortValue}
+              onChange={(e) => setSortValue(e.target.value)}
             >
-              Alive
-            </button>
-            <button
-              className={status === "Dead" ? "active" : ""}
-              onClick={() => setStatus("Dead")}
-            >
-              Dead
-            </button>
-            <button
-              className={status === "unknown" ? "active" : ""}
-              onClick={() => setStatus("unknown")}
-            >
-              Unknown
-            </button>
+              <option value="none">Sort</option>
+              <option value="az">A → Z</option>
+              <option value="za">Z → A</option>
+            </select>
           </div>
-        </div>
 
-        {/* RIGHT: Search + View Episodes */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          <input
-            type="text"
-            placeholder="Search character..."
-            className="search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-
+          {/* VIEW EPISODES */}
           <Link href="/episodes" className="episodes-link">
             View Episodes →
           </Link>
         </div>
+
+        {/* RIGHT */}
+        <input
+          type="text"
+          placeholder="Search character..."
+          className="input-dark"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
       </div>
 
-      {/* GRID OF CHARACTERS */}
+      {/* GRID */}
       <div className="grid">
-        {filteredCharacters.map((char) => (
-          <div key={char.id} className="card fade-in">
+        {characters.map((char) => (
+          <div key={char.id} className="card">
             <Image
               src={char.image}
               alt={char.name}
               width={300}
               height={300}
-              className="card-image"
             />
+
             <h3>
-              <Link href={`/characters/${char.id}`}>{char.name}</Link>
+              <Link href={`/characters/${char.id}`}>
+                {char.name}
+              </Link>
             </h3>
-            <p style={{ fontSize: "13px", opacity: 0.85 }}>{char.species}</p>
+
+            <p className="species-label">
+              {char.species}
+            </p>
           </div>
         ))}
       </div>

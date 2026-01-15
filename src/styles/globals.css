@@ -300,3 +300,170 @@ a:hover {
     max-height: none;
   }
 }
+.header-right {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sort-dropdown {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+  background: white;
+}
+
+.card-sub {
+  font-size: 13px;
+  opacity: 0.75;
+}
+.sort-dropdown {
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: 1px solid #333;
+  background-color: #1f1f1f;
+  color: #eaeaea;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.sort-dropdown:focus {
+  outline: none;
+  border-color: #61dafb;
+}
+.search-area {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+.sort-dropdown {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid #333;
+  background: linear-gradient(145deg, #1f1f1f, #2a2a2a);
+  color: #eaeaea;
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sort-dropdown:hover {
+  border-color: #61dafb;
+}
+
+.sort-dropdown:focus {
+  outline: none;
+  border-color: #61dafb;
+  box-shadow: 0 0 8px rgba(97, 218, 251, 0.4);
+}
+.sort-dark {
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: 1px solid #333;
+  background-color: #1f1f1f;
+  color: #eaeaea;
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sort-dark:hover {
+  border-color: #61dafb;
+}
+
+.sort-dark:focus {
+  outline: none;
+  border-color: #61dafb;
+  box-shadow: 0 0 6px rgba(97, 218, 251, 0.35);
+}
+.species-label {
+  font-size: 13px;
+  opacity: 0.75;
+  margin-top: 4px;
+}
+.sort-dark {
+  margin-top: 10px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1px solid #333;
+  background-color: #1f1f1f;
+  color: #eaeaea;
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sort-dark:hover {
+  border-color: #61dafb;
+}
+
+.sort-dark:focus {
+  outline: none;
+  border-color: #61dafb;
+  box-shadow: 0 0 8px rgba(97, 218, 251, 0.4);
+}
+
+.sort-dark optgroup {
+  color: #aaa;
+  font-style: normal;
+}
+.species-label {
+  font-size: 13px;
+  opacity: 0.7;
+  margin-top: 4px;
+}
+/* =====================
+   Unified Input / Select Style
+===================== */
+.input-dark {
+  width: 220px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #444;
+  background-color: #2b2b2b;
+  color: #ffffff;
+  font-size: 14px;
+  appearance: none;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input-dark::placeholder {
+  color: #aaa;
+}
+
+.input-dark:focus {
+  outline: none;
+  border-color: #61dafb;
+  box-shadow: 0 0 0 2px rgba(97, 218, 251, 0.25);
+}
+
+/* Dropdown arrow */
+.input-dark.select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23aaa' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  padding-right: 36px;
+}
+
+/* Species label */
+.species-label {
+  font-size: 13px;
+  opacity: 0.75;
+  margin-top: 4px;
+}
+
+/* Header alignment improvement */
+.controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+/* Push View Episodes lower */
+.episodes-link {
+  display: inline-block;
+  margin-top: 14px; /* increase space below filters */
+}

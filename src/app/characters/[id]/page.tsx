@@ -2,7 +2,7 @@
 
 import { gql } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
@@ -41,6 +41,7 @@ const GET_CHARACTER = gql`
 
 export default function CharacterPage() {
   const params = useParams();
+  const router = useRouter();
   const id = params.id as string;
 
   const { data, loading, error } = useQuery<CharacterData>(GET_CHARACTER, {
@@ -75,43 +76,56 @@ export default function CharacterPage() {
   const episodes = data.character.episode.slice(0, visibleCount);
 
   return (
-    <div className="character-page">
-      {/* Character Card */}
-      <div className="character-card fade-in">
-        <Image
-          src={data.character.image}
-          alt={data.character.name}
-          width={300}
-          height={300}
-          className="character-image"
-          priority
-        />
+    <div className="container fade-in">
+      {/* BACK BUTTON */}
+      <button
+        onClick={() => router.back()}
+        style={{
+          marginBottom: "20px",
+          padding: "8px 14px",
+          borderRadius: "8px",
+          background: "#1f1f1f",
+          border: "none",
+          color: "#fff",
+          cursor: "pointer",
+        }}
+      >
+        ← Back
+      </button>
 
-        <h1>{data.character.name}</h1>
-        <p>
-          <strong>Status:</strong> {data.character.status}
-        </p>
-        <p>
-          <strong>Species:</strong> {data.character.species}
-        </p>
-      </div>
+      <div className="character-page">
+        {/* Character Card */}
+        <div className="character-card">
+          <Image
+            src={data.character.image}
+            alt={data.character.name}
+            width={300}
+            height={300}
+            className="character-image"
+            priority
+          />
+          <h1>{data.character.name}</h1>
+          <p><strong>Status:</strong> {data.character.status}</p>
+          <p><strong>Species:</strong> {data.character.species}</p>
+        </div>
 
-      {/* Episodes Card */}
-      <div className="episodes-card fade-in">
-        <h2>Episodes</h2>
+        {/* Episodes Card */}
+        <div className="episodes-card">
+          <h2>Episodes</h2>
 
-        <div className="episodes-list">
-          {episodes.map((ep) => (
-            <div key={ep.id} className="episode-item">
-              <Link href={`/episodes/${ep.id}`}>
-                <strong>{ep.episode}</strong> — {ep.name}
-              </Link>
-            </div>
-          ))}
+          <div className="episodes-list">
+            {episodes.map((ep) => (
+              <div key={ep.id} className="episode-item">
+                <Link href={`/episodes/${ep.id}`}>
+                  <strong>{ep.episode}</strong> — {ep.name}
+                </Link>
+              </div>
+            ))}
 
-          {visibleCount < data.character.episode.length && (
-            <div ref={loadMoreRef} className="load-trigger" />
-          )}
+            {visibleCount < data.character.episode.length && (
+              <div ref={loadMoreRef} className="load-trigger" />
+            )}
+          </div>
         </div>
       </div>
     </div>
