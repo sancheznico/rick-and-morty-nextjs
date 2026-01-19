@@ -2,7 +2,7 @@
 
 import { gql } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -44,7 +44,6 @@ function formatEpisode(code: string) {
 
 export default function EpisodePage() {
   const params = useParams();
-  const router = useRouter();
 
   const { data, loading, error } = useQuery<EpisodeData>(
     GET_EPISODE,
@@ -55,22 +54,8 @@ export default function EpisodePage() {
   if (error || !data) return <p>Error loading episode</p>;
 
   return (
-    <div className="container fade-in">
-      {/* BACK BUTTON */}
-      <button
-        onClick={() => router.back()}
-        style={{
-          marginBottom: "20px",
-          padding: "8px 14px",
-          borderRadius: "8px",
-          background: "#1f1f1f",
-          border: "none",
-          color: "#fff",
-          cursor: "pointer",
-        }}
-      >
-        ← Back
-      </button>
+    <div className="container">
+      <Link href="/episodes" className="back-btn">← Back</Link>
 
       <h1>{formatEpisode(data.episode.episode)}</h1>
       <p><strong>{data.episode.name}</strong></p>
@@ -88,7 +73,9 @@ export default function EpisodePage() {
               height={300}
             />
             <h3>
-              <Link href={`/characters/${char.id}`}>{char.name}</Link>
+              <Link href={`/characters/${char.id}`}>
+                {char.name}
+              </Link>
             </h3>
           </div>
         ))}
