@@ -4,7 +4,7 @@ import { gql } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Character = {
   id: string;
@@ -15,14 +15,20 @@ type Character = {
 };
 
 type CharactersData = {
-  characters: {
+  characters?: {
+    info?: {
+      next: number | null;
+    };
     results: Character[];
   };
 };
 
 const GET_CHARACTERS = gql`
-  query {
-    characters(page: 1) {
+  query GetCharacters($page: Int!) {
+    characters(page: $page) {
+      info {
+        next
+      }
       results {
         id
         name
@@ -35,16 +41,72 @@ const GET_CHARACTERS = gql`
 `;
 
 export default function HomePage() {
-  const { data, loading, error } = useQuery<CharactersData>(GET_CHARACTERS);
+  const [page, setPage] = useState(1);
+  const [allCharacters, setAllCharacters] = useState<Character[]>([]);
+  const [isFetching, setIsFetching] = useState(false);
 
   const [search, setSearch] = useState("");
   const [filterValue, setFilterValue] = useState("all");
   const [sortValue, setSortValue] = useState("none");
 
-  if (loading) return <p>Loading...</p>;
-  if (error || !data) return <p>Error loading characters</p>;
+  const { data, loading, error } = useQuery<CharactersData>(
+    GET_CHARACTERS,
+    {
+      variables: { page },
+    }
+  );
 
-  let characters = data.characters.results.filter((char) =>
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!data?.characters?.results) return;
+
+    setAllCharacters((prev) => {
+      const newChars = data.characters!.results.filter(
+        (c) => !prev.some((p) => p.id === c.id)
+      );
+      return [...prev, ...newChars];
+    });
+  }, [data]);
+
+  useEffect(() => {
+    const target = loadMoreRef.current;
+    if (!target) return;
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        const firstEntry = entries[0];
+        if (firstEntry.isIntersecting && !loading) {
+          setIsFetching(true);
+          setPage((prev) => prev + 1);
+        }
+      },
+      {
+        root: null,
+        rootMargin: "0px",
+        threshold: 1.0,
+      }
+    );
+
+    observerRef.current.observe(target);
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [loading]);
+
+  useEffect(() => {
+    if (!loading) {
+      setIsFetching(false);
+    }
+  }, [loading]);
+
+  if (error) return <p>Error loading characters</p>;
+
+  let characters = allCharacters.filter((char) =>
     char.name.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -68,16 +130,16 @@ export default function HomePage() {
     );
   }
 
+  const hasNextPage = data?.characters?.info?.next !== null;
+
   return (
     <div className="container">
       {/* HEADER */}
       <div className="header">
-        {/* LEFT */}
         <div>
           <h1>Rick and Morty Characters</h1>
 
           <div className="controls">
-            {/* FILTER */}
             <select
               className="input-dark select"
               value={filterValue}
@@ -99,7 +161,6 @@ export default function HomePage() {
               </optgroup>
             </select>
 
-            {/* SORT */}
             <select
               className="input-dark select"
               value={sortValue}
@@ -111,13 +172,11 @@ export default function HomePage() {
             </select>
           </div>
 
-          {/* VIEW EPISODES */}
           <Link href="/episodes" className="episodes-link">
             View Episodes →
           </Link>
         </div>
 
-        {/* RIGHT */}
         <input
           type="text"
           placeholder="Search character..."
@@ -130,7 +189,7 @@ export default function HomePage() {
       {/* GRID */}
       <div className="grid">
         {characters.map((char) => (
-          <div key={char.id} className="card">
+          <div key={char.id} className="card fade-in">
             <Image
               src={char.image}
               alt={char.name}
@@ -144,12 +203,25 @@ export default function HomePage() {
               </Link>
             </h3>
 
-            <p className="species-label">
-              {char.species}
-            </p>
+            <p className="species-label">{char.species}</p>
           </div>
         ))}
       </div>
+
+      {/* LOADER TRIGGER */}
+      {hasNextPage && (
+        <div ref={loadMoreRef} style={{ height: "30px" }}></div>
+      )}
+
+      {/* Hidden load button (kept for design consistency) */}
+      <div style={{ textAlign: "center", marginTop: "30px" }}>
+        <button className="load-more" style={{ opacity: 0 }}>
+          Load more characters
+        </button>
+      </div>
+
+      {/* Loading indicator */}
+      {isFetching && <p style={{ textAlign: "center" }}>Loading...</p>}
     </div>
   );
 }
