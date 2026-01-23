@@ -424,3 +424,8 @@ a:hover {
   background-repeat: no-repeat;
   padding-right: 32px;
 }
+/* CENTER ONLY THE TITLE TEXT */
+.title-center {
+  text-align: center;
+  width: 100%;
+}

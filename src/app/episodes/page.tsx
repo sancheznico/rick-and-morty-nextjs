@@ -58,41 +58,49 @@ export default function EpisodesPage() {
 
   return (
     <div className="page">
+      {/* CENTERED TITLE */}
       <header className="topbar">
-        <div className="title">
-          <h1>Episodes</h1>
-          <p>Rick & Morty</p>
-        </div>
+        <div className="title title-center">
+          <h1>Rick & Morty</h1>
+            <p>Episodes</p>
 
+        </div>
+      </header>
+
+      {/* BACK TO CHARACTERS ABOVE FILTERS */}
+      <div className="episodes-link-row">
         <Link href="/" className="nav-link">
           ← Back to Characters
         </Link>
-      </header>
-
-      {/* SEARCH ON TOP RIGHT */}
-      <div className="search-container">
-        <input
-          className="search"
-          placeholder="Search episodes..."
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-        />
       </div>
 
-      {/* FILTER ON LEFT */}
-      <div className="filter-bar">
-        <select
-          className="select"
-          value={seasonFilter}
-          onChange={(e) => setSeasonFilter(e.target.value)}
-        >
-          <option value="all">All Seasons</option>
-          <option value="01">Season 1</option>
-          <option value="02">Season 2</option>
-          <option value="03">Season 3</option>
-          <option value="04">Season 4</option>
-          <option value="05">Season 5</option>
-        </select>
+      {/* SEARCH + FILTER ROW */}
+      <div className="filters-search-row">
+        {/* SEARCH RIGHT */}
+        <div className="search-container">
+          <input
+            className="search"
+            placeholder="Search episodes..."
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+          />
+        </div>
+
+        {/* FILTER LEFT */}
+        <div className="filter-bar">
+          <select
+            className="select"
+            value={seasonFilter}
+            onChange={(e) => setSeasonFilter(e.target.value)}
+          >
+            <option value="all">All Seasons</option>
+            <option value="01">Season 1</option>
+            <option value="02">Season 2</option>
+            <option value="03">Season 3</option>
+            <option value="04">Season 4</option>
+            <option value="05">Season 5</option>
+          </select>
+        </div>
       </div>
 
       {/* GRID */}

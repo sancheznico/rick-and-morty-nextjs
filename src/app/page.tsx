@@ -106,16 +106,20 @@ export default function HomePage() {
 
   return (
     <div className="page">
+      {/* HEADER */}
       <header className="topbar">
-        <div className="title">
-          <h1>Rick & Morty</h1>
-          <p>Characters</p>
-        </div>
+  <div className="title title-center">
+    <h1>Rick & Morty</h1>
+    <p>Characters</p>
+  </div>
+</header>
 
+      {/* VIEW EPISODES — ABOVE FILTERS */}
+      <div className="episodes-link-row">
         <Link href="/episodes" className="nav-link">
           View Episodes →
         </Link>
-      </header>
+      </div>
 
       {/* SEARCH UPPER RIGHT */}
       <div className="search-container">
