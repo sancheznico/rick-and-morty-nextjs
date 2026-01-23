@@ -6,20 +6,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 
-type Character = {
-  id: string;
-  name: string;
-  image: string;
-};
-
-type EpisodeData = {
-  episode: {
-    name: string;
-    air_date: string;
-    episode: string;
-    characters: Character[];
-  };
-};
+import type { EpisodeData } from "@/types/graphql";
 
 const GET_EPISODE = gql`
   query GetEpisode($id: ID!) {
@@ -36,47 +23,44 @@ const GET_EPISODE = gql`
   }
 `;
 
-function formatEpisode(code: string) {
-  const season = code.substring(1, 3);
-  const ep = code.substring(4, 6);
-  return `Season ${parseInt(season)} • Episode ${parseInt(ep)}`;
-}
-
 export default function EpisodePage() {
-  const params = useParams();
+  const { id } = useParams<{ id: string }>();
 
   const { data, loading, error } = useQuery<EpisodeData>(
     GET_EPISODE,
-    { variables: { id: params.id } }
+    { variables: { id } }
   );
 
-  if (loading) return <p>Loading...</p>;
-  if (error || !data) return <p>Error loading episode</p>;
+  if (loading) return <p className="loading">Loading...</p>;
+  if (error || !data?.episode) return <p className="error">Error loading episode</p>;
+
+  const episode = data.episode;
 
   return (
-    <div className="container">
-      <Link href="/episodes" className="back-btn">← Back</Link>
+    <div className="page">
+      <header className="topbar">
+        <div className="title">
+          <h1>{episode.episode}</h1>
+          <p>{episode.name}</p>
+        </div>
 
-      <h1>{formatEpisode(data.episode.episode)}</h1>
-      <p><strong>{data.episode.name}</strong></p>
-      <p>Air Date: {data.episode.air_date}</p>
+        <Link href="/episodes" className="nav-link">
+          ← Back
+        </Link>
+      </header>
 
-      <h2 style={{ marginTop: "30px" }}>Characters</h2>
+      <div className="info">
+        <p><strong>Air Date:</strong> {episode.air_date}</p>
+        <p><strong>Characters:</strong> {episode.characters?.length ?? 0}</p>
+      </div>
 
       <div className="grid">
-        {data.episode.characters.map((char) => (
+        {(episode.characters ?? []).map((char) => (
           <div key={char.id} className="card">
-            <Image
-              src={char.image}
-              alt={char.name}
-              width={300}
-              height={300}
-            />
-            <h3>
-              <Link href={`/characters/${char.id}`}>
-                {char.name}
-              </Link>
-            </h3>
+            <Image src={char.image} alt={char.name} width={300} height={300} className="avatar" />
+            <Link href={`/characters/${char.id}`} className="name-link">
+              {char.name}
+            </Link>
           </div>
         ))}
       </div>

@@ -4,24 +4,9 @@ import { gql } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-type Character = {
-  id: string;
-  name: string;
-  image: string;
-  status: string;
-  species: string;
-};
-
-type CharactersData = {
-  characters?: {
-    info?: {
-      next: number | null;
-    };
-    results: Character[];
-  };
-};
+import type { Character, CharactersData } from "@/types/graphql";
 
 const GET_CHARACTERS = gql`
   query GetCharacters($page: Int!) {
@@ -42,186 +27,168 @@ const GET_CHARACTERS = gql`
 
 export default function HomePage() {
   const [page, setPage] = useState(1);
-  const [allCharacters, setAllCharacters] = useState<Character[]>([]);
+  const [characters, setCharacters] = useState<Character[]>([]);
   const [isFetching, setIsFetching] = useState(false);
 
-  const [search, setSearch] = useState("");
-  const [filterValue, setFilterValue] = useState("all");
-  const [sortValue, setSortValue] = useState("none");
+  const [searchText, setSearchText] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [speciesFilter, setSpeciesFilter] = useState("all");
+  const [sortOrder, setSortOrder] = useState("none");
 
   const { data, loading, error } = useQuery<CharactersData>(
     GET_CHARACTERS,
-    {
-      variables: { page },
-    }
+    { variables: { page } }
   );
 
-  const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
-    if (!data?.characters?.results) return;
-
-    setAllCharacters((prev) => {
-      const newChars = data.characters!.results.filter(
-        (c) => !prev.some((p) => p.id === c.id)
-      );
-      return [...prev, ...newChars];
+    const results = data?.characters?.results ?? [];
+    setCharacters((prev) => {
+      const ids = new Set(prev.map((c) => c.id));
+      return [...prev, ...results.filter((c) => !ids.has(c.id))];
     });
   }, [data]);
 
   useEffect(() => {
-    const target = loadMoreRef.current;
-    if (!target) return;
+    if (!loadMoreRef.current) return;
 
     observerRef.current = new IntersectionObserver(
-      (entries) => {
-        const firstEntry = entries[0];
-        if (firstEntry.isIntersecting && !loading) {
+      ([entry]) => {
+        if (entry.isIntersecting && !loading) {
           setIsFetching(true);
           setPage((prev) => prev + 1);
         }
       },
-      {
-        root: null,
-        rootMargin: "0px",
-        threshold: 1.0,
-      }
+      { threshold: 1 }
     );
 
-    observerRef.current.observe(target);
-
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
-    };
+    observerRef.current.observe(loadMoreRef.current);
+    return () => observerRef.current?.disconnect();
   }, [loading]);
 
   useEffect(() => {
-    if (!loading) {
-      setIsFetching(false);
-    }
+    if (!loading) setIsFetching(false);
   }, [loading]);
 
-  if (error) return <p>Error loading characters</p>;
+  if (error) return <p className="error">Error loading characters</p>;
 
-  let characters = allCharacters.filter((char) =>
-    char.name.toLowerCase().includes(search.toLowerCase())
+  const statusOptions = useMemo(
+    () => Array.from(new Set(characters.map((c) => c.status))),
+    [characters]
   );
 
-  characters = characters.filter((char) => {
-    if (filterValue === "all") return true;
-    if (filterValue === "alive") return char.status === "Alive";
-    if (filterValue === "dead") return char.status === "Dead";
-    if (filterValue === "unknown") return char.status === "unknown";
-    return char.species === filterValue;
+  const speciesOptions = useMemo(
+    () => Array.from(new Set(characters.map((c) => c.species))),
+    [characters]
+  );
+
+  let visibleCharacters = characters.filter((c) =>
+    c.name.toLowerCase().includes(searchText.toLowerCase())
+  );
+
+  visibleCharacters = visibleCharacters.filter((c) => {
+    if (statusFilter !== "all" && c.status !== statusFilter) return false;
+    if (speciesFilter !== "all" && c.species !== speciesFilter) return false;
+    return true;
   });
 
-  if (sortValue === "az") {
-    characters = [...characters].sort((a, b) =>
-      a.name.localeCompare(b.name)
-    );
+  if (sortOrder === "az") {
+    visibleCharacters.sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  if (sortValue === "za") {
-    characters = [...characters].sort((a, b) =>
-      b.name.localeCompare(a.name)
-    );
+  if (sortOrder === "za") {
+    visibleCharacters.sort((a, b) => b.name.localeCompare(a.name));
   }
 
-  const hasNextPage = data?.characters?.info?.next !== null;
+  const hasNext = data?.characters?.info?.next !== null;
 
   return (
-    <div className="container">
-      {/* HEADER */}
-      <div className="header">
-        <div>
-          <h1>Rick and Morty Characters</h1>
-
-          <div className="controls">
-            <select
-              className="input-dark select"
-              value={filterValue}
-              onChange={(e) => setFilterValue(e.target.value)}
-            >
-              <option value="all">All Characters</option>
-
-              <optgroup label="Status">
-                <option value="alive">Alive</option>
-                <option value="dead">Dead</option>
-                <option value="unknown">Unknown</option>
-              </optgroup>
-
-              <optgroup label="Species">
-                <option value="Human">Human</option>
-                <option value="Alien">Alien</option>
-                <option value="Robot">Robot</option>
-                <option value="Humanoid">Humanoid</option>
-              </optgroup>
-            </select>
-
-            <select
-              className="input-dark select"
-              value={sortValue}
-              onChange={(e) => setSortValue(e.target.value)}
-            >
-              <option value="none">Sort</option>
-              <option value="az">A → Z</option>
-              <option value="za">Z → A</option>
-            </select>
-          </div>
-
-          <Link href="/episodes" className="episodes-link">
-            View Episodes →
-          </Link>
+    <div className="page">
+      <header className="topbar">
+        <div className="title">
+          <h1>Rick & Morty</h1>
+          <p>Characters</p>
         </div>
 
+        <Link href="/episodes" className="nav-link">
+          View Episodes →
+        </Link>
+      </header>
+
+      {/* SEARCH UPPER RIGHT */}
+      <div className="search-container">
         <input
-          type="text"
+          className="search"
           placeholder="Search character..."
-          className="input-dark"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
         />
       </div>
 
-      {/* GRID */}
+      {/* FILTER BAR */}
+      <div className="filter-bar">
+        <select
+          className="select"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
+          <option value="all">All Status</option>
+          {statusOptions.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+
+        <select
+          className="select"
+          value={speciesFilter}
+          onChange={(e) => setSpeciesFilter(e.target.value)}
+        >
+          <option value="all">All Species</option>
+          {speciesOptions.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+
+        <select
+          className="select"
+          value={sortOrder}
+          onChange={(e) => setSortOrder(e.target.value)}
+        >
+          <option value="none">Sort</option>
+          <option value="az">A → Z</option>
+          <option value="za">Z → A</option>
+        </select>
+      </div>
+
+      {/* CHARACTER GRID */}
       <div className="grid">
-        {characters.map((char) => (
-          <div key={char.id} className="card fade-in">
+        {visibleCharacters.map((char) => (
+          <div key={char.id} className="card">
             <Image
               src={char.image}
               alt={char.name}
               width={300}
               height={300}
+              className="avatar"
             />
-
-            <h3>
-              <Link href={`/characters/${char.id}`}>
-                {char.name}
-              </Link>
+            <h3 className="name">
+              <Link href={`/characters/${char.id}`}>{char.name}</Link>
             </h3>
-
-            <p className="species-label">{char.species}</p>
+            <p className="meta">
+              {char.species} • {char.status}
+            </p>
           </div>
         ))}
       </div>
 
-      {/* LOADER TRIGGER */}
-      {hasNextPage && (
-        <div ref={loadMoreRef} style={{ height: "30px" }}></div>
-      )}
-
-      {/* Hidden load button (kept for design consistency) */}
-      <div style={{ textAlign: "center", marginTop: "30px" }}>
-        <button className="load-more" style={{ opacity: 0 }}>
-          Load more characters
-        </button>
-      </div>
-
-      {/* Loading indicator */}
-      {isFetching && <p style={{ textAlign: "center" }}>Loading...</p>}
+      {hasNext && <div ref={loadMoreRef} className="load-ref" />}
+      {isFetching && <p className="loading">Loading more...</p>}
     </div>
   );
 }

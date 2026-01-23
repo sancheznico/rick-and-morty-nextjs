@@ -2,29 +2,15 @@
 
 import { gql } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-type Episode = {
-  id: string;
-  name: string;
-  episode: string;
-};
-
-type CharacterData = {
-  character: {
-    name: string;
-    image: string;
-    status: string;
-    species: string;
-    episode: Episode[];
-  };
-};
+import type { CharacterData } from "@/types/graphql";
 
 const GET_CHARACTER = gql`
-  query ($id: ID!) {
+  query GetCharacter($id: ID!) {
     character(id: $id) {
       name
       image
@@ -40,91 +26,64 @@ const GET_CHARACTER = gql`
 `;
 
 export default function CharacterPage() {
-  const params = useParams();
-  const router = useRouter();
-  const id = params.id as string;
+  const { id } = useParams<{ id: string }>();
+  const { data, loading, error } = useQuery<CharacterData>(GET_CHARACTER, { variables: { id } });
 
-  const { data, loading, error } = useQuery<CharacterData>(GET_CHARACTER, {
-    variables: { id },
-  });
-
-  const ITEMS_PER_LOAD = 5;
-  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_LOAD);
+  const episodes = data?.character?.episode ?? [];
+  const [visibleCount, setVisibleCount] = useState(8);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (!loadMoreRef.current || !data) return;
+    if (!loadMoreRef.current) return;
 
-    const observer = new IntersectionObserver((entries) => {
-      if (
-        entries[0].isIntersecting &&
-        visibleCount < data.character.episode.length
-      ) {
-        setVisibleCount((prev) =>
-          Math.min(prev + ITEMS_PER_LOAD, data.character.episode.length)
-        );
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && visibleCount < episodes.length) {
+        setVisibleCount((prev) => prev + 8);
       }
     });
 
     observer.observe(loadMoreRef.current);
     return () => observer.disconnect();
-  }, [data, visibleCount]);
+  }, [episodes.length, visibleCount]);
 
-  if (loading) return <p>Loading...</p>;
-  if (error || !data) return <p>Error loading character</p>;
+  if (loading) return <p className="loading">Loading...</p>;
+  if (error || !data?.character) return <p className="error">Error loading character</p>;
 
-  const episodes = data.character.episode.slice(0, visibleCount);
+  const character = data.character;
 
   return (
-    <div className="container fade-in">
-      {/* BACK BUTTON */}
-      <button
-        onClick={() => router.back()}
-        style={{
-          marginBottom: "20px",
-          padding: "8px 14px",
-          borderRadius: "8px",
-          background: "#1f1f1f",
-          border: "none",
-          color: "#fff",
-          cursor: "pointer",
-        }}
-      >
-        ← Back
-      </button>
-
-      <div className="character-page">
-        {/* Character Card */}
-        <div className="character-card">
-          <Image
-            src={data.character.image}
-            alt={data.character.name}
-            width={300}
-            height={300}
-            className="character-image"
-            priority
-          />
-          <h1>{data.character.name}</h1>
-          <p><strong>Status:</strong> {data.character.status}</p>
-          <p><strong>Species:</strong> {data.character.species}</p>
+    <div className="page">
+      <header className="topbar">
+        <div className="title">
+          <h1>{character.name}</h1>
+          <p>{character.species} • {character.status}</p>
         </div>
 
-        {/* Episodes Card */}
+        <Link href="/" className="nav-link">
+          ← Back
+        </Link>
+      </header>
+
+      <div className="character-detail">
+        <div className="profile-card">
+          <Image src={character.image ?? ""} alt={character.name ?? "Character"} width={300} height={300} className="avatar-big" />
+          <div className="profile-meta">
+            <p><strong>Status:</strong> {character.status}</p>
+            <p><strong>Species:</strong> {character.species}</p>
+          </div>
+        </div>
+
         <div className="episodes-card">
           <h2>Episodes</h2>
-
           <div className="episodes-list">
-            {episodes.map((ep) => (
+            {episodes.slice(0, visibleCount).map((ep) => (
               <div key={ep.id} className="episode-item">
                 <Link href={`/episodes/${ep.id}`}>
-                  <strong>{ep.episode}</strong> — {ep.name}
+                  {ep.episode} — {ep.name}
                 </Link>
               </div>
             ))}
-
-            {visibleCount < data.character.episode.length && (
-              <div ref={loadMoreRef} className="load-trigger" />
-            )}
+            {visibleCount < episodes.length && <div ref={loadMoreRef} className="load-ref" />}
           </div>
         </div>
       </div>
