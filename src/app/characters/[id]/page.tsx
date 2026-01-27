@@ -5,9 +5,13 @@ import { useQuery } from "@apollo/client/react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { CharacterData } from "@/types/graphql";
+
+import Loading from "@/components/Loading";
+import ErrorState from "@/components/ErrorState";
+import EmptyState from "@/components/EmptyState";
 
 const GET_CHARACTER = gql`
   query GetCharacter($id: ID!) {
@@ -46,10 +50,16 @@ export default function CharacterPage() {
     return () => observer.disconnect();
   }, [episodes.length, visibleCount]);
 
-  if (loading) return <p className="loading">Loading...</p>;
-  if (error || !data?.character) return <p className="error">Error loading character</p>;
+  // ⬇️ SAFE render logic
+  let content = null;
+  if (loading) content = <Loading />;
+  if (error) content = <ErrorState />;
 
-  const character = data.character;
+  if (content) return content;
+
+  const character = data?.character;
+
+  if (!character) return <EmptyState text="Character not found." />;
 
   return (
     <div className="page">

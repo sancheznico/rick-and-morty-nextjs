@@ -7,6 +7,10 @@ import { useEffect, useMemo, useState } from "react";
 
 import type { EpisodesData, Episode } from "@/types/graphql";
 
+import Loading from "@/components/Loading";
+import ErrorState from "@/components/ErrorState";
+import EmptyState from "@/components/EmptyState";
+
 const GET_EPISODES = gql`
   query GetEpisodes($page: Int!) {
     episodes(page: $page) {
@@ -41,6 +45,11 @@ export default function EpisodesPage() {
     });
   }, [data]);
 
+  // ⬇️ SAFE render logic
+  let content = null;
+  if (loading) content = <Loading />;
+  if (error) content = <ErrorState />;
+
   const filteredEpisodes = useMemo(() => {
     return episodes.filter((ep) => {
       const matchSearch = ep.name
@@ -54,29 +63,24 @@ export default function EpisodesPage() {
     });
   }, [episodes, searchText, seasonFilter]);
 
-  if (error) return <p className="error">Error loading episodes</p>;
+  if (content) return content;
 
   return (
     <div className="page">
-      {/* CENTERED TITLE */}
       <header className="topbar">
         <div className="title title-center">
           <h1>Rick & Morty</h1>
-            <p>Episodes</p>
-
+          <p>Episodes</p>
         </div>
       </header>
 
-      {/* BACK TO CHARACTERS ABOVE FILTERS */}
       <div className="episodes-link-row">
         <Link href="/" className="nav-link">
           ← Back to Characters
         </Link>
       </div>
 
-      {/* SEARCH + FILTER ROW */}
       <div className="filters-search-row">
-        {/* SEARCH RIGHT */}
         <div className="search-container">
           <input
             className="search"
@@ -86,7 +90,6 @@ export default function EpisodesPage() {
           />
         </div>
 
-        {/* FILTER LEFT */}
         <div className="filter-bar">
           <select
             className="select"
@@ -103,7 +106,6 @@ export default function EpisodesPage() {
         </div>
       </div>
 
-      {/* GRID */}
       <div className="grid">
         {filteredEpisodes.map((ep) => (
           <div key={ep.id} className="card">
@@ -115,7 +117,10 @@ export default function EpisodesPage() {
         ))}
       </div>
 
-      {/* LOAD MORE BUTTON CENTER */}
+      {!loading && filteredEpisodes.length === 0 && (
+        <EmptyState text="No episodes found." />
+      )}
+
       {data?.episodes?.info?.next && (
         <button
           className="btn"
@@ -124,8 +129,6 @@ export default function EpisodesPage() {
           Load more episodes
         </button>
       )}
-
-      {loading && <p className="loading">Loading...</p>}
     </div>
   );
 }

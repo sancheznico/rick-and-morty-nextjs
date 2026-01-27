@@ -8,6 +8,10 @@ import Image from "next/image";
 
 import type { EpisodeData } from "@/types/graphql";
 
+import Loading from "@/components/Loading";
+import ErrorState from "@/components/ErrorState";
+import EmptyState from "@/components/EmptyState";
+
 const GET_EPISODE = gql`
   query GetEpisode($id: ID!) {
     episode(id: $id) {
@@ -31,10 +35,15 @@ export default function EpisodePage() {
     { variables: { id } }
   );
 
-  if (loading) return <p className="loading">Loading...</p>;
-  if (error || !data?.episode) return <p className="error">Error loading episode</p>;
+  // ⬇️ SAFE render logic
+  let content = null;
+  if (loading) content = <Loading />;
+  if (error) content = <ErrorState />;
 
-  const episode = data.episode;
+  if (content) return content;
+
+  const episode = data?.episode;
+  if (!episode) return <EmptyState text="Episode not found." />;
 
   return (
     <div className="page">
@@ -64,6 +73,10 @@ export default function EpisodePage() {
           </div>
         ))}
       </div>
+
+      {!loading && (episode.characters ?? []).length === 0 && (
+        <EmptyState text="No characters found in this episode." />
+      )}
     </div>
   );
 }
