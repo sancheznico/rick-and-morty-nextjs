@@ -4,7 +4,13 @@ import { gql } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  Suspense,
+} from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import type { Character, CharactersData } from "@/types/graphql";
@@ -26,20 +32,19 @@ const GET_CHARACTERS = gql`
   }
 `;
 
-export default function HomePage() {
-  /* ---------------- STATE ---------------- */
+/* ---------------- CONTENT ---------------- */
+
+function HomePageContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [page, setPage] = useState(1);
   const [characters, setCharacters] = useState<Character[]>([]);
   const [isFetching, setIsFetching] = useState(false);
 
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
-  // read search from URL ONCE (safe)
   const [searchText, setSearchText] = useState(
     () => searchParams.get("search") ?? ""
   );
-
   const [statusFilter, setStatusFilter] = useState("all");
   const [speciesFilter, setSpeciesFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState("none");
@@ -47,15 +52,12 @@ export default function HomePage() {
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
-  /* ---------------- QUERY ---------------- */
   const { data, loading, error } = useQuery<CharactersData>(
     GET_CHARACTERS,
     { variables: { page } }
   );
 
-  /* ---------------- EFFECTS ---------------- */
-
-  // append characters
+  /* append characters */
   useEffect(() => {
     const results = data?.characters?.results ?? [];
     setCharacters((prev) => {
@@ -64,7 +66,7 @@ export default function HomePage() {
     });
   }, [data]);
 
-  // infinite scroll
+  /* infinite scroll */
   useEffect(() => {
     if (!loadMoreRef.current) return;
 
@@ -86,7 +88,7 @@ export default function HomePage() {
     if (!loading) setIsFetching(false);
   }, [loading]);
 
-  // sync search → URL (NO rerender loop, NO scroll reset)
+  /* sync search → URL */
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
 
@@ -101,8 +103,6 @@ export default function HomePage() {
 
     router.replace(newUrl, { scroll: false });
   }, [searchText, router]);
-
-  /* ---------------- MEMOS ---------------- */
 
   const statusOptions = useMemo(
     () => Array.from(new Set(characters.map((c) => c.status))),
@@ -137,8 +137,6 @@ export default function HomePage() {
   }, [characters, searchText, statusFilter, speciesFilter, sortOrder]);
 
   const hasNext = data?.characters?.info?.next !== null;
-
-  /* ---------------- RENDER ---------------- */
 
   return (
     <div className="page">
@@ -227,4 +225,13 @@ export default function HomePage() {
     </div>
   );
 }
- 
+
+/* ---------------- PAGE WRAPPER ---------------- */
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={<p className="loading">Loading...</p>}>
+      <HomePageContent />
+    </Suspense>
+  );
+}
