@@ -9,9 +9,8 @@ import {
   useMemo,
   useRef,
   useState,
-  Suspense,
 } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 import type { Character, CharactersData } from "@/types/graphql";
 
@@ -32,19 +31,14 @@ const GET_CHARACTERS = gql`
   }
 `;
 
-/* ---------------- CONTENT ---------------- */
-
-function HomePageContent() {
+export default function HomePage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   const [page, setPage] = useState(1);
   const [characters, setCharacters] = useState<Character[]>([]);
   const [isFetching, setIsFetching] = useState(false);
 
-  const [searchText, setSearchText] = useState(
-    () => searchParams.get("search") ?? ""
-  );
+  const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [speciesFilter, setSpeciesFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState("none");
@@ -87,6 +81,13 @@ function HomePageContent() {
   useEffect(() => {
     if (!loading) setIsFetching(false);
   }, [loading]);
+
+  /* initialize search from URL */
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const q = params.get("search") ?? "";
+    setSearchText(q);
+  }, []);
 
   /* sync search → URL */
   useEffect(() => {
@@ -223,15 +224,5 @@ function HomePageContent() {
       {hasNext && <div ref={loadMoreRef} className="load-ref" />}
       {isFetching && <p className="loading">Loading more...</p>}
     </div>
-  );
-}
-
-/* ---------------- PAGE WRAPPER ---------------- */
-
-export default function HomePage() {
-  return (
-    <Suspense fallback={<p className="loading">Loading...</p>}>
-      <HomePageContent />
-    </Suspense>
   );
 }
