@@ -1,12 +1,9 @@
 "use client";
 
 import { ApolloProvider } from "@apollo/client/react";
-import client from "../lib/apollo-client";
+import { getApolloClient } from "../lib/apollo-client";
 
-export default function ApolloWrapper({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function ApolloWrapper({ children }: { children: React.ReactNode }) {
+  const client = getApolloClient(); // ✅ new instance
   return <ApolloProvider client={client}>{children}</ApolloProvider>;
 }
