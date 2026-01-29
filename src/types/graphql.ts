@@ -1,3 +1,7 @@
+/* ======================================================
+   CORE SHARED TYPES
+====================================================== */
+
 export type Character = {
   id: string;
   name: string;
@@ -10,41 +14,61 @@ export type Episode = {
   id: string;
   name: string;
   episode: string;
+  air_date?: string;
+  characters?: Character[];
 };
+
+/* ======================================================
+   CHARACTERS LIST
+====================================================== */
 
 export type CharactersData = {
-  characters?: {
-    info?: {
+  characters: {
+    info: {
       next: number | null;
     };
-    results?: Character[];
+    results: Character[];
   };
 };
+
+/* ======================================================
+   CHARACTER DETAIL
+====================================================== */
 
 export type CharacterData = {
-  character?: {
-    name?: string;
-    image?: string;
-    status?: string;
-    species?: string;
-    episode?: Episode[];
-  };
+  character: {
+    id?: string;
+    name: string;
+    image: string;
+    status: string;
+    species: string;
+    episode: Episode[];
+  } | null;
 };
 
-export type EpisodeData = {
-  episode?: {
-    name?: string;
-    air_date?: string;
-    episode?: string;
-    characters?: Character[];
-  };
-};
+/* ======================================================
+   EPISODES LIST
+====================================================== */
 
 export type EpisodesData = {
-  episodes?: {
-    info?: {
+  episodes: {
+    info: {
       next: number | null;
     };
-    results?: Episode[];
+    results: Episode[];
   };
+};
+
+/* ======================================================
+   EPISODE DETAIL
+====================================================== */
+
+export type EpisodeData = {
+  episode: {
+    id: string;
+    name: string;
+    air_date: string;
+    episode: string;
+    characters: Character[];
+  } | null;
 };

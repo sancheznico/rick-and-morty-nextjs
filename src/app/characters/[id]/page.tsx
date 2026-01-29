@@ -1,21 +1,14 @@
-"use client";
-
 import { gql } from "@apollo/client";
-import { useQuery } from "@apollo/client/react";
-import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
 
+import { getApolloClient } from "@/lib/apollo-client";
 import type { CharacterData } from "@/types/graphql";
-
-import Loading from "@/components/Loading";
-import ErrorState from "@/components/ErrorState";
-import EmptyState from "@/components/EmptyState";
 
 const GET_CHARACTER = gql`
   query GetCharacter($id: ID!) {
     character(id: $id) {
+      id
       name
       image
       status
@@ -29,74 +22,58 @@ const GET_CHARACTER = gql`
   }
 `;
 
-export default function CharacterPage() {
-  const { id } = useParams<{ id: string }>();
-  const { data, loading, error } = useQuery<CharacterData>(GET_CHARACTER, { variables: { id } });
+export default async function CharacterPage({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const client = getApolloClient();
 
-  const episodes = data?.character?.episode ?? [];
-  const [visibleCount, setVisibleCount] = useState(8);
-  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const result = await client.query<CharacterData>({
+    query: GET_CHARACTER,
+    variables: { id: params.id },
+  });
 
-  useEffect(() => {
-    if (!loadMoreRef.current) return;
+  const data = result.data;
 
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting && visibleCount < episodes.length) {
-        setVisibleCount((prev) => prev + 8);
-      }
-    });
+  // ✅ First guard
+  if (!data) return <p>Failed to load character.</p>;
 
-    observer.observe(loadMoreRef.current);
-    return () => observer.disconnect();
-  }, [episodes.length, visibleCount]);
+  const character = data.character;
 
-  // ⬇️ SAFE render logic
-  let content = null;
-  if (loading) content = <Loading />;
-  if (error) content = <ErrorState />;
-
-  if (content) return content;
-
-  const character = data?.character;
-
-  if (!character) return <EmptyState text="Character not found." />;
+  // ✅ Second guard for `character`
+  if (!character) return <p>Character not found.</p>;
 
   return (
     <div className="page">
-      <header className="topbar">
-        <div className="title">
-          <h1>{character.name}</h1>
-          <p>{character.species} • {character.status}</p>
-        </div>
+      <Link href="/" className="nav-link">
+        ← Back to Characters
+      </Link>
 
-        <Link href="/" className="nav-link">
-          ← Back
-        </Link>
-      </header>
+      <div className="character">
+        <Image
+          src={character.image}
+          alt={character.name}
+          width={300}
+          height={300}
+        />
 
-      <div className="character-detail">
-        <div className="profile-card">
-          <Image src={character.image ?? ""} alt={character.name ?? "Character"} width={300} height={300} className="avatar-big" />
-          <div className="profile-meta">
-            <p><strong>Status:</strong> {character.status}</p>
-            <p><strong>Species:</strong> {character.species}</p>
-          </div>
-        </div>
-
-        <div className="episodes-card">
-          <h2>Episodes</h2>
-          <div className="episodes-list">
-            {episodes.slice(0, visibleCount).map((ep) => (
-              <div key={ep.id} className="episode-item">
-                <Link href={`/episodes/${ep.id}`}>
-                  {ep.episode} — {ep.name}
-                </Link>
-              </div>
-            ))}
-            {visibleCount < episodes.length && <div ref={loadMoreRef} className="load-ref" />}
-          </div>
-        </div>
+        <h1>{character.name}</h1>
+        <p>
+          {character.status} – {character.species}
+        </p>
       </div>
+
+      <h2>Episodes</h2>
+      <ul>
+        {character.episode.map((ep) => (
+          <li key={ep.id}>
+            <Link href={`/episodes/${ep.id}`}>
+              {ep.episode} – {ep.name}
+            </Link>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

@@ -1,82 +1,62 @@
-"use client";
-
 import { gql } from "@apollo/client";
-import { useQuery } from "@apollo/client/react";
-import { useParams } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 
+import { getApolloClient } from "@/lib/apollo-client";
 import type { EpisodeData } from "@/types/graphql";
-
-import Loading from "@/components/Loading";
-import ErrorState from "@/components/ErrorState";
-import EmptyState from "@/components/EmptyState";
 
 const GET_EPISODE = gql`
   query GetEpisode($id: ID!) {
     episode(id: $id) {
+      id
       name
-      air_date
       episode
       characters {
         id
         name
-        image
       }
     }
   }
 `;
 
-export default function EpisodePage() {
-  const { id } = useParams<{ id: string }>();
+export default async function EpisodePage({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const client = getApolloClient();
 
-  const { data, loading, error } = useQuery<EpisodeData>(
-    GET_EPISODE,
-    { variables: { id } }
-  );
+  const result = await client.query<EpisodeData>({
+    query: GET_EPISODE,
+    variables: { id: params.id },
+  });
 
-  // ⬇️ SAFE render logic
-  let content = null;
-  if (loading) content = <Loading />;
-  if (error) content = <ErrorState />;
+  const data = result.data;
 
-  if (content) return content;
+  // ✅ Guard for data
+  if (!data) return <p>Failed to load episode.</p>;
 
-  const episode = data?.episode;
-  if (!episode) return <EmptyState text="Episode not found." />;
+  const episode = data.episode;
+
+  // ✅ Guard for episode
+  if (!episode) return <p>Episode not found.</p>;
 
   return (
     <div className="page">
-      <header className="topbar">
-        <div className="title">
-          <h1>{episode.episode}</h1>
-          <p>{episode.name}</p>
-        </div>
+      <Link href="/episodes" className="nav-link">
+        ← Back to Episodes
+      </Link>
 
-        <Link href="/episodes" className="nav-link">
-          ← Back
-        </Link>
-      </header>
+      <h1>{episode.episode}</h1>
+      <h2>{episode.name}</h2>
 
-      <div className="info">
-        <p><strong>Air Date:</strong> {episode.air_date}</p>
-        <p><strong>Characters:</strong> {episode.characters?.length ?? 0}</p>
-      </div>
-
-      <div className="grid">
-        {(episode.characters ?? []).map((char) => (
-          <div key={char.id} className="card">
-            <Image src={char.image} alt={char.name} width={300} height={300} className="avatar" />
-            <Link href={`/characters/${char.id}`} className="name-link">
-              {char.name}
-            </Link>
-          </div>
+      <h3>Characters</h3>
+      <ul>
+        {episode.characters.map((char) => (
+          <li key={char.id}>
+            <Link href={`/characters/${char.id}`}>{char.name}</Link>
+          </li>
         ))}
-      </div>
-
-      {!loading && (episode.characters ?? []).length === 0 && (
-        <EmptyState text="No characters found in this episode." />
-      )}
+      </ul>
     </div>
   );
 }
