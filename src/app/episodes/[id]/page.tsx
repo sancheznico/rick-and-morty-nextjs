@@ -25,20 +25,14 @@ export default async function EpisodePage({
 }) {
   const client = getApolloClient();
 
-  const result = await client.query<EpisodeData>({
+  const { data } = await client.query<EpisodeData>({
     query: GET_EPISODE,
     variables: { id: params.id },
   });
 
-  const data = result.data;
-
-  // ✅ Guard for data
-  if (!data) return <p>Failed to load episode.</p>;
-
-  const episode = data.episode;
-
-  // ✅ Guard for episode
-  if (!episode) return <p>Episode not found.</p>;
+  if (!data?.episode) {
+    return <p>Episode not found.</p>;
+  }
 
   return (
     <div className="page">
@@ -46,12 +40,12 @@ export default async function EpisodePage({
         ← Back to Episodes
       </Link>
 
-      <h1>{episode.episode}</h1>
-      <h2>{episode.name}</h2>
+      <h1>{data.episode.episode}</h1>
+      <h2>{data.episode.name}</h2>
 
       <h3>Characters</h3>
       <ul>
-        {episode.characters.map((char) => (
+        {data.episode.characters.map((char) => (
           <li key={char.id}>
             <Link href={`/characters/${char.id}`}>{char.name}</Link>
           </li>

@@ -27,43 +27,36 @@ export default async function EpisodesPage({
   const page = Number(searchParams?.page ?? 1);
   const client = getApolloClient();
 
-  const result = await client.query<EpisodesData>({
+  const { data } = await client.query<EpisodesData>({
     query: GET_EPISODES,
     variables: { page },
   });
 
-  const data = result.data;
-
-  // ✅ Type-safe guard
-  if (!data) {
+  if (!data?.episodes) {
     return <p>Failed to load episodes.</p>;
   }
 
   return (
     <div className="page">
-      <header className="topbar title-center">
-        <h1>Episodes</h1>
-      </header>
-
       <Link href="/" className="nav-link">
         ← Back to Characters
       </Link>
 
+      <h1>Episodes</h1>
+
       <div className="grid">
         {data.episodes.results.map((ep) => (
-          <div key={ep.id} className="card">
-            <Link href={`/episodes/${ep.id}`}>
-              <h3>{ep.episode}</h3>
-              <p>{ep.name}</p>
-            </Link>
-          </div>
+          <Link key={ep.id} href={`/episodes/${ep.id}`} className="card">
+            <h3>{ep.episode}</h3>
+            <p>{ep.name}</p>
+          </Link>
         ))}
       </div>
 
       {data.episodes.info.next && (
         <Link
-          href={`/episodes?page=${data.episodes.info.next}`}
           className="btn"
+          href={`/episodes?page=${data.episodes.info.next}`}
         >
           Load More
         </Link>

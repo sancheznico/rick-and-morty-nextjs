@@ -29,20 +29,16 @@ export default async function CharacterPage({
 }) {
   const client = getApolloClient();
 
-  const result = await client.query<CharacterData>({
+  const { data } = await client.query<CharacterData>({
     query: GET_CHARACTER,
     variables: { id: params.id },
   });
 
-  const data = result.data;
-
-  // ✅ First guard
-  if (!data) return <p>Failed to load character.</p>;
+  if (!data?.character) {
+    return <p>Character not found.</p>;
+  }
 
   const character = data.character;
-
-  // ✅ Second guard for `character`
-  if (!character) return <p>Character not found.</p>;
 
   return (
     <div className="page">
@@ -57,7 +53,6 @@ export default async function CharacterPage({
           width={300}
           height={300}
         />
-
         <h1>{character.name}</h1>
         <p>
           {character.status} – {character.species}
