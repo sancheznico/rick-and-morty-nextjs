@@ -19,7 +19,11 @@ export type Episode = {
 };
 
 /* ======================================================
-   CHARACTERS LIST
+   CHARACTERS LIST (HOMEPAGE)
+   - search (name)
+   - filters (status, species)
+   - sorting (A–Z / Z–A)
+   - pagination
 ====================================================== */
 
 export type CharactersData = {
@@ -32,7 +36,7 @@ export type CharactersData = {
 };
 
 /* ======================================================
-   CHARACTER DETAIL
+   CHARACTER DETAIL PAGE
 ====================================================== */
 
 export type CharacterData = {
@@ -47,7 +51,7 @@ export type CharacterData = {
 };
 
 /* ======================================================
-   EPISODES LIST
+   EPISODES LIST PAGE
 ====================================================== */
 
 export type EpisodesData = {
@@ -60,7 +64,7 @@ export type EpisodesData = {
 };
 
 /* ======================================================
-   EPISODE DETAIL
+   EPISODE DETAIL PAGE
 ====================================================== */
 
 export type EpisodeData = {

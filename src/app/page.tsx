@@ -33,103 +33,114 @@ const GET_CHARACTERS = gql`
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams?: {
+  searchParams?: Promise<{
     page?: string;
     name?: string;
     status?: string;
     species?: string;
     sort?: string;
-  };
+  }>;
 }) {
-  const page = Number(searchParams?.page ?? 1);
-  const name = searchParams?.name ?? "";
-  const status = searchParams?.status ?? "";
-  const species = searchParams?.species ?? "";
-  const sort = searchParams?.sort ?? "";
+  // ✅ unwrap async searchParams
+  const params = (await searchParams) ?? {};
+
+  const name = params.name ?? "";
+  const status = params.status ?? "";
+  const species = params.species ?? "";
+  const sort = params.sort ?? "";
+  const page = Number(params.page ?? 1);
 
   const client = getApolloClient();
 
-  const result = await client.query<CharactersData>({
+  const { data } = await client.query<CharactersData>({
     query: GET_CHARACTERS,
     variables: {
       page,
-      name: name || null,     // 🔍 SEARCH BY NAME
-      status: status || null,
-      species: species || null,
+      name: name || undefined,
+      status: status || undefined,
+      species: species || undefined,
     },
   });
 
-  const data = result.data;
-
-  // ✅ REQUIRED TYPE-SAFE GUARD
-  if (!data || !data.characters || !data.characters.results) {
+  if (!data) {
     return <p>Failed to load characters.</p>;
   }
 
-  let characters = data.characters.results;
+  // ✅ sorting (SSR-safe)
+  let characters = [...data.characters.results];
 
-  // ✅ SORT (SERVER SIDE)
-  if (sort === "name-asc") {
-    characters = [...characters].sort((a, b) =>
-      a.name.localeCompare(b.name)
-    );
+  if (sort === "az") {
+    characters.sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  if (sort === "name-desc") {
-    characters = [...characters].sort((a, b) =>
-      b.name.localeCompare(a.name)
-    );
+  if (sort === "za") {
+    characters.sort((a, b) => b.name.localeCompare(a.name));
   }
 
   return (
     <div className="page">
-      {/* TOP BAR */}
+      {/* ================= TOP BAR ================= */}
       <div className="topbar">
         <div className="title">
           <h1>Characters</h1>
-          <p>Rick & Morty Universe</p>
         </div>
 
-        {/* 🔍 SEARCH (PRESS ENTER) */}
-        <form method="get" className="search-container">
+        {/* SEARCH (TOP RIGHT) */}
+        <form method="GET" className="search-container">
           <input
-            className="search"
             type="text"
             name="name"
             placeholder="Search character..."
             defaultValue={name}
+            className="search"
           />
-
-          {/* keep filters when searching */}
-          <input type="hidden" name="status" value={status} />
-          <input type="hidden" name="species" value={species} />
-          <input type="hidden" name="sort" value={sort} />
         </form>
       </div>
 
-      {/* FILTER LINKS (SSR-SAFE) */}
-      <div className="filter-bar">
-        <Link href={`/?status=alive&name=${name}`}>Alive</Link>
-        <Link href={`/?status=dead&name=${name}`}>Dead</Link>
-        <Link href={`/?status=unknown&name=${name}`}>Unknown</Link>
+      {/* ================= FILTERS (LEFT) ================= */}
+      <form method="GET" className="filter-bar">
+  {/* preserve search */}
+  <input type="hidden" name="name" value={name} />
 
-        <Link href={`/?species=Human&name=${name}`}>Human</Link>
-        <Link href={`/?species=Alien&name=${name}`}>Alien</Link>
+  <select name="status" defaultValue={status} className="select">
+    <option value="">Status</option>
+    <option value="alive">Alive</option>
+    <option value="dead">Dead</option>
+    <option value="unknown">Unknown</option>
+  </select>
 
-        <Link href={`/?sort=name-asc&name=${name}`}>A–Z</Link>
-        <Link href={`/?sort=name-desc&name=${name}`}>Z–A</Link>
-      </div>
+  <select name="species" defaultValue={species} className="select">
+    <option value="">Species</option>
+    <option value="human">Human</option>
+    <option value="alien">Alien</option>
+  </select>
 
-      {/* GRID */}
+  <select name="sort" defaultValue={sort} className="select">
+    <option value="">Sort</option>
+    <option value="az">A–Z</option>
+    <option value="za">Z–A</option>
+  </select>
+
+  {/* Invisible submit button (SSR-safe) */}
+  <button type="submit" style={{ display: "none" }} aria-hidden />
+</form>
+
+
+      {/* ================= GRID ================= */}
       <div className="grid">
         {characters.map((char) => (
-          <Link key={char.id} href={`/characters/${char.id}`} className="card">
+          <Link
+            key={char.id}
+            href={`/characters/${char.id}`}
+            className="card"
+          >
             <Image
               src={char.image}
               alt={char.name}
-              width={300}
-              height={300}
+              width={200}
+              height={200}
               className="avatar"
+              loading="eager"
             />
             <div className="name">{char.name}</div>
             <div className="meta">
@@ -139,20 +150,11 @@ export default async function HomePage({
         ))}
       </div>
 
-      {/* LOAD MORE */}
+      {/* ================= LOAD MORE ================= */}
       {data.characters.info.next && (
         <Link
           className="btn"
-          href={{
-            pathname: "/",
-            query: {
-              page: data.characters.info.next,
-              name,
-              status,
-              species,
-              sort,
-            },
-          }}
+          href={`/?page=${data.characters.info.next}&name=${name}&status=${status}&species=${species}&sort=${sort}`}
         >
           Load More
         </Link>
@@ -160,4 +162,3 @@ export default async function HomePage({
     </div>
   );
 }
-  
