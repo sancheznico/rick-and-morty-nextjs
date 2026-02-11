@@ -1,12 +1,17 @@
-// src/lib/apollo-client.ts
-import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
+"use client";
 
-// Named export, SSR safe
+import { ApolloClient, InMemoryCache, HttpLink, ApolloLink } from "@apollo/client";
+
+const httpLink = new HttpLink({
+  uri: "https://rickandmortyapi.com/graphql",
+  credentials: "same-origin",
+});
+
+const client = new ApolloClient({
+  link: ApolloLink.from([httpLink]),
+  cache: new InMemoryCache(),
+});
+
 export function getApolloClient() {
-  return new ApolloClient({
-    link: new HttpLink({
-      uri: "https://rickandmortyapi.com/graphql",
-    }),
-    cache: new InMemoryCache(),
-  });
+  return client;
 }
