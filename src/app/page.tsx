@@ -1,9 +1,9 @@
 "use client";
 
+import { Suspense, useState, useEffect } from "react";
 import { gql } from "@apollo/client";
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { getApolloClient } from "@/lib/apollo-client";
@@ -54,7 +54,6 @@ function Filters({
     const formData = new FormData(form);
     const query = new URLSearchParams(formData as any).toString();
 
-    // Push to URL without reloading
     window.history.pushState(null, "", `/?${query}`);
     window.dispatchEvent(new Event("popstate"));
   };
@@ -72,7 +71,6 @@ function Filters({
         className="filter-bar"
         style={{ display: "flex", gap: "12px", alignItems: "center" }}
       >
-        {/* Status Filter */}
         <select name="status" defaultValue={status} className="select" onChange={handleChange}>
           <option value="">Status</option>
           <option value="alive">Alive</option>
@@ -80,7 +78,6 @@ function Filters({
           <option value="unknown">Unknown</option>
         </select>
 
-        {/* Species Filter */}
         <select name="species" defaultValue={species} className="select" onChange={handleChange}>
           <option value="">Species</option>
           <option value="human">Human</option>
@@ -96,7 +93,6 @@ function Filters({
           <option value="planet">Planet</option>
         </select>
 
-        {/* Sort */}
         <select name="sort" defaultValue={sort} className="select" onChange={handleChange}>
           <option value="">Sort</option>
           <option value="az">A–Z</option>
@@ -104,7 +100,6 @@ function Filters({
         </select>
       </div>
 
-      {/* Search */}
       <input
         type="text"
         name="name"
@@ -118,6 +113,14 @@ function Filters({
 }
 
 export default function HomePage() {
+  return (
+    <Suspense fallback={<p>Loading...</p>}>
+      <HomePageContent />
+    </Suspense>
+  );
+}
+
+function HomePageContent() {
   const searchParams = useSearchParams();
 
   const name = searchParams.get("name") || "";
@@ -159,14 +162,11 @@ export default function HomePage() {
   }, [name, status, species, sort]);
 
   const handleLoadMore = () => {
-    if (nextPage) {
-      fetchCharacters(nextPage, true);
-    }
+    if (nextPage) fetchCharacters(nextPage, true);
   };
 
   return (
     <div className="page">
-      {/* Top bar with title and "View All Episodes" */}
       <div className="topbar" style={{ justifyContent: "space-between" }}>
         <h1>Characters</h1>
         <Link href="/episodes" className="btn">
@@ -174,13 +174,10 @@ export default function HomePage() {
         </Link>
       </div>
 
-      {/* Filters + Search */}
       <Filters name={name} status={status} species={species} sort={sort} />
 
-      {/* Loading state */}
       {loading && <p>Loading...</p>}
 
-      {/* Characters Grid */}
       <div className="grid">
         {characters.map((char) => (
           <Link key={char.id} href={`/characters/${char.id}`} className="card">
@@ -191,7 +188,6 @@ export default function HomePage() {
         ))}
       </div>
 
-      {/* Load More Button */}
       {nextPage && !loading && (
         <button className="btn" onClick={handleLoadMore}>
           Load More
