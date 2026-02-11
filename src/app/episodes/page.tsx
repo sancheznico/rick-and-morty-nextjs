@@ -1,3 +1,6 @@
+"use client"; // ← must be first line
+
+import { useEffect, useState } from "react";
 import { gql } from "@apollo/client";
 import Link from "next/link";
 
@@ -7,34 +10,36 @@ import type { EpisodesData } from "@/types/graphql";
 const GET_EPISODES = gql`
   query GetEpisodes($page: Int!) {
     episodes(page: $page) {
-      info {
-        next
-      }
-      results {
-        id
-        name
-        episode
-      }
+      info { next }
+      results { id name episode }
     }
   }
 `;
 
-export default async function EpisodesPage({
-  searchParams,
-}: {
-  searchParams?: { page?: string };
-}) {
-  const page = Number(searchParams?.page ?? 1);
-  const client = getApolloClient();
+export default function EpisodesPage() {
+  const [episodes, setEpisodes] = useState<EpisodesData["episodes"]["results"]>([]);
+  const [nextPage, setNextPage] = useState<number | null>(1);
+  const [loading, setLoading] = useState(false);
 
-  const { data } = await client.query<EpisodesData>({
-    query: GET_EPISODES,
-    variables: { page },
-  });
+  const fetchEpisodes = async (page: number, append = false) => {
+    setLoading(true);
+    const client = getApolloClient();
+    const { data } = await client.query<EpisodesData>({
+      query: GET_EPISODES,
+      variables: { page },
+      fetchPolicy: "cache-first",
+    });
 
-  if (!data?.episodes) {
-    return <p>Failed to load episodes.</p>;
-  }
+    if (data) {
+      setEpisodes(prev => append ? [...prev, ...data.episodes.results] : data.episodes.results);
+      setNextPage(data.episodes.info.next);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchEpisodes(1, false); // fetch first page on mount
+  }, []);
 
   return (
     <div className="page">
@@ -44,8 +49,10 @@ export default async function EpisodesPage({
 
       <h1>Episodes</h1>
 
+      {loading && <p>Loading...</p>}
+
       <div className="grid">
-        {data.episodes.results.map((ep) => (
+        {episodes.map(ep => (
           <Link key={ep.id} href={`/episodes/${ep.id}`} className="card">
             <h3>{ep.episode}</h3>
             <p>{ep.name}</p>
@@ -53,13 +60,10 @@ export default async function EpisodesPage({
         ))}
       </div>
 
-      {data.episodes.info.next && (
-        <Link
-          className="btn"
-          href={`/episodes?page=${data.episodes.info.next}`}
-        >
+      {nextPage && !loading && (
+        <button className="btn" onClick={() => fetchEpisodes(nextPage, true)}>
           Load More
-        </Link>
+        </button>
       )}
     </div>
   );
