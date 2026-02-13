@@ -1,9 +1,29 @@
+"use client";
+
 import { gql } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 import Link from "next/link";
 import Image from "next/image";
+import { useParams } from "next/navigation";
 
-import { getApolloClient } from "@/lib/apollo-client";
-import type { CharacterData } from "@/types/graphql";
+type Episode = {
+  id: string;
+  name: string;
+  episode: string;
+};
+
+type Character = {
+  id: string;
+  name: string;
+  image: string;
+  status: string;
+  species: string;
+  episode: Episode[];
+};
+
+type CharacterResponse = {
+  character: Character;
+};
 
 const GET_CHARACTER = gql`
   query GetCharacter($id: ID!) {
@@ -22,21 +42,20 @@ const GET_CHARACTER = gql`
   }
 `;
 
-export default async function CharacterPage({
-  params,
-}: {
-  params: { id: string };
-}) {
-  const client = getApolloClient();
+export default function CharacterPage() {
+  const params = useParams();
+  const id = params.id as string;
 
-  const { data } = await client.query<CharacterData>({
-    query: GET_CHARACTER,
-    variables: { id: params.id },
-  });
+  const { data, loading, error } = useQuery<CharacterResponse>(
+    GET_CHARACTER,
+    {
+      variables: { id },
+    }
+  );
 
-  if (!data?.character) {
-    return <p>Character not found.</p>;
-  }
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error loading character.</p>;
+  if (!data?.character) return <p>Character not found.</p>;
 
   const character = data.character;
 
@@ -46,29 +65,38 @@ export default async function CharacterPage({
         ← Back to Characters
       </Link>
 
-      <div className="character">
-        <Image
-          src={character.image}
-          alt={character.name}
-          width={300}
-          height={300}
-        />
-        <h1>{character.name}</h1>
-        <p>
-          {character.status} – {character.species}
-        </p>
-      </div>
+      <div className="character-detail">
+        <div className="profile-card">
+          <Image
+            src={character.image}
+            alt={character.name}
+            width={300}
+            height={300}
+            className="avatar-big"
+          />
+          <h1>{character.name}</h1>
 
-      <h2>Episodes</h2>
-      <ul>
-        {character.episode.map((ep) => (
-          <li key={ep.id}>
-            <Link href={`/episodes/${ep.id}`}>
-              {ep.episode} – {ep.name}
-            </Link>
-          </li>
-        ))}
-      </ul>
+          <div className="profile-meta">
+            <p><strong>Status:</strong> {character.status}</p>
+            <p><strong>Species:</strong> {character.species}</p>
+          </div>
+        </div>
+
+        <div className="episodes-card">
+          <h2>Episodes Appeared In</h2>
+
+          <div className="episodes-list">
+            {character.episode.map((ep: Episode) => (
+              <div key={ep.id} className="episode-item">
+                <Link href={`/episodes/${ep.id}`}>
+                  <strong>{ep.episode}</strong>
+                  <p>{ep.name}</p>
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
